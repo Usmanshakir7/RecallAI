@@ -28,7 +28,7 @@ def test_analyze_missing_transcript():
     assert response.status_code == 422  
     
 def test_analyze_empty_transcript():
-    response = client.post("/analyze", json={})
+    response = client.post("/analyze", json={"transcript": "   "})
     assert response.status_code == 422
     
 def test_analyze_only_spaces():

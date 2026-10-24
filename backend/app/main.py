@@ -7,7 +7,7 @@ app = FastAPI(title="RecallAI")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://recallai.vercel.app"],
+    allow_origins=["http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
