@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { mkdirSync } from "node:fs";
 import { HMEM } from "./src/index.ts";
 
-const PORT = Number(process.env.HMEM_PORT ?? 7070);
+const PORT = Number(process.env.HMEM_PORT ?? 7171);
 const DIR = process.env.HMEM_DIR ?? "./data";
 mkdirSync(DIR, { recursive: true });
 
