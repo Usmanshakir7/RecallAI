@@ -1,15 +1,14 @@
 
 def generate_insights(transcript: str) -> dict:
-    """Generate structured insights from a meeting transcript."""
+    """Return a placeholder response for meeting insights."""
 
     if not transcript.strip():
         raise ValueError("Transcript cannot be empty")
 
     return {
+        "status": "completed",
         "summary": "",
         "topics": [],
         "decisions": [],
         "action_items": [],
-        "open_questions": [],
-        "original_transcript": transcript
     }
