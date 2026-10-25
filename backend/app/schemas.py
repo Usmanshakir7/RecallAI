@@ -1,3 +1,4 @@
+
 from typing import List, Optional
 from pydantic import BaseModel, field_validator
 
@@ -29,3 +30,4 @@ class InsightsResponse(BaseModel):
     topics: List[str]
     decisions: List[str]
     action_items: List[ActionItem]
+
