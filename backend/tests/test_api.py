@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-
+from app.services.insights import remove_duplicates
 import app.main as main_module
 from app.main import app
 
@@ -47,3 +47,89 @@ def test_analyze_AI_failure(monkeypatch):
     
     response = client.post("/analyze", json={"transcript": VALID_TRANSCRIPT})
     assert response.status_code == 502        
+
+
+    
+def test_analyze_extracts_decisions():
+    response = client.post(
+        "/analyze",
+        json={"transcript": "We decided to use FastAPI for the backend."},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert any("decided" in item.lower() for item in data["decisions"])
+
+
+def test_analyze_extracts_action_items():
+    response = client.post(
+        "/analyze",
+        json={"transcript": "I will finish the API tests by Friday."},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["action_items"]) >= 1
+    assert any(
+        "finish the API tests" in item["task"]
+        for item in data["action_items"]
+    )
+
+
+def test_analyze_extracts_topics():
+    response = client.post(
+        "/analyze",
+        json={
+            "transcript": (
+                "The team discussed backend development. "
+                "We decided to use FastAPI for the backend."
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["topics"]) >= 1
+def test_remove_duplicates_preserves_order():
+    items = [
+        "We decided to use FastAPI.",
+        "Sara will test the API.",
+        "we decided to use fastapi.",
+    ]
+
+    result = remove_duplicates(items)
+
+    assert result == [
+        "We decided to use FastAPI.",
+        "Sara will test the API.",
+    ]
+
+    
+def test_analyze_extracts_action_owner():
+    response = client.post(
+        "/analyze",
+        json={"transcript": "Sara: I will test the API."},
+    )
+
+    assert response.status_code == 200
+    action_items = response.json()["action_items"]
+
+    assert any(
+        item["owner"] == "Sara"
+        and "I will test the API" in item["task"]
+        for item in action_items
+    )
+
+def test_action_without_named_owner():
+    response = client.post(
+        "/analyze",
+        json={"transcript": "We will review the design."},
+    )
+
+    assert response.status_code == 200
+    action_items = response.json()["action_items"]
+
+    assert any(
+        item["owner"] is None
+        and "We will review the design" in item["task"]
+        for item in action_items
+    )
