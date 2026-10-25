@@ -2,7 +2,8 @@ from fastapi.testclient import TestClient
 from app.services.insights import remove_duplicates
 import app.main as main_module
 from app.main import app
-
+from app.services.verifier import verify_insights
+from app.services.prompts import MEETING_INSIGHTS_PROMPT
 client = TestClient(app)
 
 EXPECTED_KEYS = {"status", "summary", "topics", "decisions", "action_items"}
@@ -133,3 +134,80 @@ def test_action_without_named_owner():
         and "We will review the design" in item["task"]
         for item in action_items
     )
+
+def test_meeting_prompt_requires_grounded_extraction():
+    prompt = MEETING_INSIGHTS_PROMPT.lower()
+
+    assert "never invent" in prompt
+    assert "null" in prompt
+    assert "valid json" in prompt
+    assert "open_questions" in prompt
+
+def test_verifier_accepts_supported_insights():
+    transcript = (
+        "Sara: I will test the API. "
+        "We decided to use FastAPI."
+    )
+
+    insights = {
+        "decisions": ["We decided to use FastAPI."],
+        "action_items": [
+            {"task": "Sara: I will test the API.", "owner": "Sara"}
+        ],
+    }
+
+    result = verify_insights(transcript, insights)
+
+    assert result["passed"] is True
+    assert result["unsupported_decisions"] == []
+    assert result["unsupported_action_items"] == []
+
+
+def test_verifier_flags_unsupported_insights():
+    transcript = "We discussed the API testing plan."
+
+    insights = {
+        "decisions": ["We decided to deploy tomorrow."],
+        "action_items": [
+            {"task": "Ali will deploy the application.", "owner": "Ali"}
+        ],
+    }
+
+    result = verify_insights(transcript, insights)
+
+    assert result["passed"] is False
+    assert len(result["unsupported_decisions"]) == 1
+    assert len(result["unsupported_action_items"]) == 1
+
+def test_verifier_flags_invented_owner():
+    transcript = "The team discussed testing the API."
+
+    insights = {
+        "decisions": [],
+        "action_items": [
+            {"task": "Test the API.", "owner": "Sara"}
+        ],
+    }
+
+    result = verify_insights(transcript, insights)
+
+    assert result["passed"] is False
+    assert result["unsupported_action_items"] == insights["action_items"]
+
+from app.services.verifier import verify_insights
+
+
+def test_verifier_flags_invented_owner():
+    transcript = "Test the API."
+
+    insights = {
+        "decisions": [],
+        "action_items": [
+            {"task": "Test the API.", "owner": "Sara"}
+        ],
+    }
+
+    result = verify_insights(transcript, insights)
+
+    assert result["passed"] is False
+    assert result["unsupported_action_items"] == insights["action_items"]
