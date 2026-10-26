@@ -6,7 +6,8 @@ import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.schemas import TranscriptRequest, InsightsResponse
+from app.schemas import TranscriptRequest, InsightsResponse, TaskCheckRequest, TaskCheckResponse
+from app.services import hmem_client, zetaris_client, tasks_service
 from app.services import hmem_client, zetaris_client
 from app.services.insights import generate_insights
 
@@ -68,3 +69,15 @@ def memory_recall(q: str):
         return {"query": q, "memories": hmem_client.recall(q)}
     except requests.RequestException:
         raise HTTPException(status_code=502, detail="Memory service is unreachable.")
+
+@app.post("/tasks/check", response_model=TaskCheckResponse)
+def tasks_check(req: TaskCheckRequest):
+    """Return open tasks for the given owners from the Zetaris tasks table."""
+    if not zetaris_client.is_configured():
+        raise HTTPException(status_code=503, detail="Zetaris is not configured.")
+    owners = [o.strip() for o in req.owners if o.strip()]
+    try:
+        tasks = tasks_service.get_open_tasks(owners)
+    except zetaris_client.ZetarisError:
+        raise HTTPException(status_code=502, detail="Zetaris is unreachable.")
+    return {"owners_checked": owners, "open_tasks": tasks}

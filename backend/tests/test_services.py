@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 import app.main as main_module
 from app.main import app
-from app.services import hmem_client, zetaris_client
+from app.services import hmem_client, zetaris_client, tasks_service
 
 client = TestClient(app)
 
@@ -107,3 +107,51 @@ def test_analyze_works_when_hmem_is_down(monkeypatch):
     monkeypatch.setattr(hmem_client, "add_memory", down)
     response = client.post("/analyze", json={"transcript": VALID_TRANSCRIPT})
     assert response.status_code == 200
+    
+def test_tasks_check_not_configured():
+    response = client.post("/tasks/check", json={"owners": ["John Doe"]})
+    assert response.status_code == 503
+
+
+def test_tasks_check_returns_open_tasks(monkeypatch):
+    monkeypatch.setenv("ZETARIS_API_KEY", "test-key")
+    captured = {}
+
+    def fake_run_sql(sql, limit=100, timeout=60):
+        captured["sql"] = sql
+        return [["T-101", "Fix login bug", "John Doe", "Open"]]
+
+    monkeypatch.setattr(zetaris_client, "run_sql", fake_run_sql)
+    response = client.post("/tasks/check", json={"owners": ["John Doe"]})
+    assert response.status_code == 200
+    assert response.json() == {
+        "owners_checked": ["John Doe"],
+        "open_tasks": [
+            {"id": "T-101", "title": "Fix login bug", "owner": "John Doe", "status": "Open"}
+        ],
+    }
+    assert "'john doe'" in captured["sql"]
+
+
+def test_tasks_check_escapes_quotes(monkeypatch):
+    monkeypatch.setenv("ZETARIS_API_KEY", "test-key")
+    captured = {}
+
+    def fake_run_sql(sql, limit=100, timeout=60):
+        captured["sql"] = sql
+        return []
+
+    monkeypatch.setattr(zetaris_client, "run_sql", fake_run_sql)
+    tasks_service.get_open_tasks(["x' OR '1'='1"])
+    assert "\\'" in captured["sql"]
+
+
+def test_tasks_check_unreachable(monkeypatch):
+    monkeypatch.setenv("ZETARIS_API_KEY", "test-key")
+
+    def down(*args, **kwargs):
+        raise zetaris_client.ZetarisError("down")
+
+    monkeypatch.setattr(zetaris_client, "run_sql", down)
+    response = client.post("/tasks/check", json={"owners": ["John Doe"]})
+    assert response.status_code == 502
