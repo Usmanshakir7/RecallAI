@@ -30,29 +30,39 @@ Restart the server after changing `.env`, because `--reload` does not watch it.
 |----------|-------------|
 | AI_API_KEY | API key for the AI provider |
 | AI_MODEL | Model name to use |
-| ZETARIS_API_KEY | API key for Zetaris. If it is missing, Zetaris routes return `503` |
-| ZETARIS_REST_URL | Zetaris REST URL, for example `http://localhost:8888/api/v1.0` |
-| ZETARIS_ORG_ID | Optional. Organisation ID sent to Zetaris. Default: `1` |
-| ZETARIS_TASKS_TABLE | Optional. Tasks table name. Default: `recallai_data.tasks` |
+| SAMPLE_MODE | Set to `true` to run with sample data |
+| ZETARIS_REST_URL | Zetaris REST API base URL, e.g. `http://localhost:8888/api/v1.0` |
+| ZETARIS_ORG_ID | Zetaris organisation ID (numeric) |
+| ZETARIS_API_KEY | Zetaris API token. Keep it in `.env` only |
+| HMEM_URL | H-MEM service address, e.g. `http://127.0.0.1:7171` |
 
-The Memory service (`hmem`) has its own variables. See `.env.example` for their names.
+## Optional services
 
-## Zetaris setup (local development)
+### H-MEM (memory service)
 
-Zetaris runs in the `zetaris-sandbox` GitHub Codespace. To reach it from your machine:
+Runs locally from `services/hmem` (Node.js). From the project root:
 
-1. Start the codespace at https://github.com/codespaces.
-2. In a separate terminal, keep this running:
-   ```
-   gh codespace ports forward 8888:8888
-   ```
-3. Set `ZETARIS_REST_URL=http://localhost:8888/api/v1.0` in `.env`.
-4. Open http://127.0.0.1:8000/health/zetaris. It should return `{"status": "ok"}`.
+```
+cd services\hmem
+npm install
+set HMEM_PORT=7171
+npx tsx server.ts
+```
 
-The tasks table must have these columns: `id`, `title`, `owner`, `status`.
+Keep this window open and set `HMEM_URL=http://127.0.0.1:7171` in `.env`.
 
-When you finish, stop the codespace to save quota.
-Do not run `docker compose down -v`, because it deletes the tasks table data.
+### Zetaris (data platform)
+
+Zetaris runs in a GitHub Codespace, not on the laptop. Start the Codespace, run
+`docker compose up -d` in the Zetaris platform folder, then forward the API port
+to your laptop:
+
+```
+gh codespace ports forward 8888:8888
+```
+
+Set `ZETARIS_REST_URL=http://localhost:8888/api/v1.0`, `ZETARIS_ORG_ID` and
+`ZETARIS_API_KEY` in `.env`. Stop the Codespace when you are done.
 
 ## Run the server
 
