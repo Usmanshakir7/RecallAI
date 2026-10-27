@@ -15,7 +15,6 @@ def new_id():
 
 def save(meeting_id, result):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    # data folder git mein na jaye
     ignore = DATA_DIR.parent / ".gitignore"
     if not ignore.exists():
         ignore.write_text("*\n", encoding="utf-8")
@@ -29,10 +28,26 @@ def save(meeting_id, result):
 
 
 def load(meeting_id):
-    # sirf 8 hex characters allow, taake koi galat path na de sake
     if not _ID_RE.match(meeting_id):
         return None
     path = DATA_DIR / f"{meeting_id}.json"
     if not path.exists():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+def list_all():
+    if not DATA_DIR.exists():
+        return []
+    items = []
+    for p in DATA_DIR.glob("*.json"):
+        try:
+            rec = json.loads(p.read_text(encoding="utf-8"))
+            items.append({
+                "meeting_id": rec["meeting_id"],
+                "saved_at": rec["saved_at"],
+                "summary": rec["result"].get("summary", "")[:120],
+            })
+        except (OSError, ValueError, KeyError):
+            continue  
+    items.sort(key=lambda x: x["saved_at"], reverse=True)
+    return items

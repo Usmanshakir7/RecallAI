@@ -47,9 +47,12 @@ def analyze(req: TranscriptRequest):
     try:
         storage.save(meeting_id, result)
     except OSError:
-        pass  # save fail ho to bhi jawab wapas jaye
+        pass 
     return result
 
+@app.get("/meetings")
+def list_meetings():
+    return storage.list_all()
 
 @app.get("/meetings/{meeting_id}")
 def get_meeting(meeting_id: str):
