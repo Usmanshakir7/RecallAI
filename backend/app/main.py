@@ -3,7 +3,7 @@ import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import TranscriptRequest, InsightsResponse
-from app.services import trace
+from app.services import storage, trace
 from app.services.insights import generate_insights
 
 app = FastAPI(title="RecallAI")
@@ -41,4 +41,19 @@ def analyze(req: TranscriptRequest):
         )
     ms = int((time.perf_counter() - start) * 1000)
     trace.record("insights", model, "ok", ms)
+
+    meeting_id = storage.new_id()
+    result = {**result, "meeting_id": meeting_id}
+    try:
+        storage.save(meeting_id, result)
+    except OSError:
+        pass  # save fail ho to bhi jawab wapas jaye
     return result
+
+
+@app.get("/meetings/{meeting_id}")
+def get_meeting(meeting_id: str):
+    record = storage.load(meeting_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+    return record["result"]

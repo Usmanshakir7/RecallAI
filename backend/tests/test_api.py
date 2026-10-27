@@ -5,7 +5,7 @@ from app.main import app
 
 client = TestClient(app)
 
-EXPECTED_KEYS = {"status", "summary", "topics", "decisions", "action_items"}
+EXPECTED_KEYS = {"status", "summary", "topics", "decisions", "action_items", "meeting_id"}
 VALID_TRANSCRIPT = "This is a valid transcript for testing purposes."
 
 def test_health():
