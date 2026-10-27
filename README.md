@@ -249,7 +249,7 @@ The suite has 33 tests covering the analyze endpoint, extraction rules, the prom
 |---|---|
 | **Ch. Muhammad Usman Shakir** | Team Lead, AI/ML |
 | **Azizullah Asad** | Backend |
-| **Palwasha Qureshi** | Frontend |
+| **Palwasha Sajjad** | Frontend |
 | **Muhammad Anis** | Mentor, issue support |
 
 ## 🤝 Contribution Workflow
