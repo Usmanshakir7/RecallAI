@@ -1,29 +1,58 @@
 # 🧠 RecallAI
+
 ### Every Conversation. Every Insight. One Place.
 
-RecallAI is an AI-powered meeting and video intelligence platform designed to transform conversations into structured, searchable, and actionable knowledge.
+RecallAI turns meeting transcripts into structured, searchable and actionable knowledge. It extracts a summary, topics, decisions and action items, remembers decisions across meetings, and checks the owners named in a meeting against the open tasks in a Zetaris table.
 
-From meetings and lectures to interviews and recorded discussions, RecallAI helps users capture important information, understand key insights, and keep track of decisions without manually reviewing lengthy recordings.
-
-## ✨ Key Features
-
-- **🎙️ Audio & Video Intelligence** — Designed to support meeting, lecture, interview, and video recordings.
-- **📝 AI-Powered Summaries** — Turn lengthy transcripts into concise, meaningful summaries.
-- **📌 Key Topics & Important Points** — Identify the main ideas and essential information from conversations.
-- **✅ Decisions & Action Items** — Organize important decisions, tasks, and follow-up actions.
-- **🔎 Evidence-Based Q&A** — Ask questions and receive answers grounded in transcript evidence.
-- **⏱️ Timestamped Transcripts** — Navigate conversation content using timestamps.
-- **📄 PDF Export** — Export transcripts and insights into shareable reports.
+Built for the **Open Agent Hackathon 2026**.
 
 ## 🎯 The Problem
 
-Important details often get lost in long meetings, lectures, interviews, and recorded discussions. Manually reviewing recordings takes time, and finding a specific decision or action item can be difficult.
+Important decisions and commitments get lost in long meetings, lectures and interviews. Re-reading a recording to find one deadline takes time, and it is hard to tell whether a topic was already decided in an earlier meeting.
 
 ## 💡 Our Solution
 
-RecallAI transforms conversations into organized information by combining transcription, AI-generated insights, and searchable knowledge workflows.
+RecallAI reads a transcript and returns organized insights. Every decision is stored in a memory service so earlier meetings can be recalled later, and task owners can be compared with what is actually open in the tracker.
 
-Our goal is to help users spend less time reviewing recordings and more time acting on the information that matters.
+## ✨ Features
+
+- **📝 Structured insights**: summary, topics, decisions and action items with owners, returned as a fixed JSON schema.
+- **✅ Grounded extraction**: only explicit commitments become action items. Unknown owners stay empty instead of being guessed.
+- **🧠 Decision memory**: decisions are stored in H-MEM and can be recalled by a text query across meetings.
+- **📋 Task cross-check**: looks up the open tasks of any owner in a Zetaris table.
+- **🛟 Works without a key**: a rule-based extractor produces insights when no AI key is set or the AI call fails.
+- **🔒 Safe by design**: input validation, a 100,000 character limit, escaped SQL values, and clear 422, 502 and 503 errors.
+
+## 🏗️ Architecture
+
+```text
+Streamlit UI  ──►  FastAPI backend  ──►  Gemini (insights, rule-based fallback)
+                         │
+                         ├──────────►  H-MEM memory service (Node.js, port 7171)
+                         │
+                         └──────────►  Zetaris REST SQL (forwarded port 8888)
+```
+
+H-MEM and Zetaris are optional services. If either is unavailable, `/analyze` still returns insights.
+
+### How `POST /analyze` works
+
+1. **Validate** the transcript. Empty text or more than 100,000 characters returns `422`.
+2. **Extract with rules.** Finds decisions ("decided", "agreed", "will use"), commitments ("Sara: I will…", "Action:", "TODO:"), questions and short topic labels.
+3. **Extract with Gemini** when `GEMINI_API_KEY` is set. Without a key, the rule-based result is returned.
+4. **Clean the output.** Topics are limited to five short labels, copies of the transcript and duplicates are removed, and generic owners such as "we" or "someone" become `null`.
+5. **Merge.** Gemini's result is used first and rule-based items fill any gaps.
+6. **Remember.** Each decision is saved to H-MEM. This step never blocks the response.
+7. **Respond** with the five-field result. If the AI step fails, the client receives `502`.
+
+## 🔌 Sponsor Technology
+
+| Technology | Role in RecallAI | Where |
+|---|---|---|
+| **Zetaris** | Data layer. Queries the tasks table through its REST SQL API without copying data. | `backend/app/services/zetaris_client.py`, `tasks_service.py`, `POST /tasks/check` |
+| **H-MEM** (Meterless) | Memory engine. Stores every decision and recalls related ones by query. | `services/hmem`, `hmem_client.py`, `GET /memory/recall` |
+
+`services/hmem` is adapted from the Meterless H-MEM reference implementation (Apache-2.0). `server.ts` is our own HTTP wrapper around the engine. Memories are saved to disk and survive a restart.
 
 ## 🛠️ Technology Stack
 
@@ -31,30 +60,33 @@ Our goal is to help users spend less time reviewing recordings and more time act
 |---|---|
 | Frontend | Python, Streamlit |
 | Backend API | Python, FastAPI |
-| AI Processing | AI-powered transcript analysis |
-| Media Processing | FFmpeg (planned integration) |
-| Speech-to-Text | faster-whisper or compatible speech API (planned integration) |
+| AI processing | Google Gemini (`google-genai`) with a rule-based fallback |
+| Memory | H-MEM (Node.js, TypeScript) |
+| Data layer | Zetaris REST API |
 | Testing | pytest |
-| Version Control | Git & GitHub |
-
-*Note: Technologies and integrations may evolve as development progresses.*
 
 ## 📂 Project Structure
 
 ```text
 RecallAI/
 ├── frontend/
-│   └── app.py
+│   └── app.py                      Streamlit interface
 ├── backend/
 │   ├── app/
-│   │   ├── main.py
-│   │   ├── schemas.py
+│   │   ├── main.py                 routes, CORS, error handling
+│   │   ├── schemas.py              request and response models
 │   │   └── services/
-│   │       └── insights.py
-│   ├── tests/
-│   ├── requirements.txt
-│   └── README.md
-├── docs/
+│   │       ├── insights.py         Gemini + rule-based extraction
+│   │       ├── verifier.py         transcript grounding check
+│   │       ├── prompts.py          extraction prompt
+│   │       ├── hmem_client.py      H-MEM HTTP client
+│   │       ├── zetaris_client.py   Zetaris REST SQL client
+│   │       └── tasks_service.py    open-task query
+│   ├── tests/                      33 tests
+│   └── requirements.txt
+├── services/
+│   └── hmem/                       H-MEM memory service
+├── .env.example
 └── README.md
 ```
 
@@ -62,71 +94,162 @@ RecallAI/
 
 ### Prerequisites
 
-- Python 3.10 or a compatible version
+- Python 3.11 or 3.12
 - Git
-- pip
+- Node.js (only for the H-MEM memory service)
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Usmanshakir7/RecallAI.git
 cd RecallAI
 ```
 
-### 2. Install Backend Dependencies
+### 2. Start the backend
 
 ```bash
-python -m pip install -r backend/requirements.txt
+cd backend
+python -m venv venv
+venv\Scripts\activate          # macOS/Linux: source venv/bin/activate
+pip install -r requirements.txt google-genai
+uvicorn app.main:app --reload
 ```
 
-### 3. Start the Backend
+Open `http://127.0.0.1:8000/health`. The response is `{"status":"ok"}`. Interactive API docs are at `http://127.0.0.1:8000/docs`.
+
+### 3. Start the frontend
+
+In a second terminal, from the project root:
 
 ```bash
-python -m uvicorn app.main:app --reload --app-dir backend
-```
-
-The API will be available at:
-
-- API: `http://127.0.0.1:8000`
-- Health Check: `http://127.0.0.1:8000/health`
-- API Documentation: `http://127.0.0.1:8000/docs`
-
-### 4. Install Frontend Dependencies
-
-```bash
-python -m pip install streamlit requests
-```
-
-### 5. Run the Frontend
-
-Open a second terminal in the project root and run:
-
-```bash
+pip install streamlit requests
 streamlit run frontend/app.py
 ```
 
-The Streamlit interface will open in your browser.
+### 4. Start H-MEM (optional)
 
-## 🔌 API Overview
+```bash
+cd services/hmem
+npm install
+set HMEM_PORT=7171             # macOS/Linux: export HMEM_PORT=7171
+npx tsx server.ts
+```
 
-The backend exposes the following endpoints:
+Set `HMEM_URL=http://127.0.0.1:7171` in `.env` and restart the backend.
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/health` | Check backend availability |
-| POST | `/analyze` | Analyze a submitted transcript and return insights |
+### 5. Connect Zetaris (optional)
 
-The transcript analysis endpoint accepts a transcript and returns structured insights according to the backend response schema.
+Zetaris runs in a GitHub Codespace. Start it, run `docker compose up -d` in the Zetaris folder, then forward the API port:
 
-For the exact request and response formats, visit `/docs` while the backend is running.
+```bash
+gh codespace ports forward 8888:8888
+```
 
-## 👥 Team Contributions
+Set `ZETARIS_REST_URL`, `ZETARIS_ORG_ID` and `ZETARIS_API_KEY` in `.env`, then check `/health/zetaris`.
 
-RecallAI is developed collaboratively, with team members contributing to AI processing, backend development, frontend implementation, testing, and documentation.
+> **Quick demo:** run steps 2 and 3 with no keys. `/analyze` works through the rule-based extractor, and the health endpoints report `not_configured`.
 
-We use Git branches and pull requests to keep development organized and review changes before merging them into the main branch.
+## ⚙️ Configuration
 
-### Contribution Workflow
+Copy `.env.example` to `.env` and fill in the values. `.env` is ignored by git.
+
+| Variable | Meaning |
+|---|---|
+| `GEMINI_API_KEY` | Gemini API key. Without it the rule-based extractor is used. |
+| `AI_MODEL` | Gemini model name. Default `gemini-3.5-flash-lite`. |
+| `HMEM_URL` | Memory service address, for example `http://127.0.0.1:7171`. |
+| `HMEM_PORT`, `HMEM_DIR` | Memory service port (7171) and data folder (`./data`). |
+| `ZETARIS_REST_URL` | Zetaris REST base URL. Default `http://localhost:8888/api/v1.0`. |
+| `ZETARIS_ORG_ID` | Numeric Zetaris organisation id. Default `1`. |
+| `ZETARIS_API_KEY` | Zetaris API token. |
+| `ZETARIS_TASKS_TABLE` | Tasks table. Default `recallai_data.tasks`. |
+
+## 📡 API Reference
+
+| Method | Endpoint | Purpose | Errors |
+|---|---|---|---|
+| GET | `/health` | Backend availability | none |
+| GET | `/health/zetaris` | `ok`, `not_configured`, `unreachable` or `unexpected_result` | none |
+| GET | `/health/hmem` | `ok`, `not_configured`, `unreachable` or `unexpected_result` | none |
+| POST | `/analyze` | Transcript in, structured insights out. Saves decisions to H-MEM | 422, 502 |
+| GET | `/memory/recall?q=…` | Up to three earlier decisions related to `q` | 503, 502 |
+| POST | `/tasks/check` | Open tasks for the given owners | 422, 502, 503 |
+
+### Analyze a transcript
+
+```bash
+curl -X POST http://127.0.0.1:8000/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"transcript":"Sara: I will test the API.\nWe decided to use FastAPI."}'
+```
+
+```json
+{
+  "status": "completed",
+  "summary": "Sara: I will test the API. We decided to use FastAPI.",
+  "topics": ["Sara: I will test the API"],
+  "decisions": ["We decided to use FastAPI"],
+  "action_items": [{"task": "I will test the API", "owner": "Sara"}]
+}
+```
+
+### Check open tasks
+
+```json
+POST /tasks/check
+{"owners": ["John Doe"]}
+
+{
+  "owners_checked": ["John Doe"],
+  "open_tasks": [
+    {"id": "T-101", "title": "Fix login bug", "owner": "John Doe", "status": "In Progress"}
+  ]
+}
+```
+
+### Recall earlier decisions
+
+```json
+GET /memory/recall?q=analytics
+
+{
+  "query": "analytics",
+  "memories": [{"id": "...", "content": "Use Zetaris", "source": "meeting-transcript"}]
+}
+```
+
+## 🧪 Testing
+
+```bash
+cd backend
+pytest -v
+```
+
+The suite has 33 tests covering the analyze endpoint, extraction rules, the prompt, the verifier, H-MEM and Zetaris health checks, memory recall, saving decisions and the task query, including service-down cases and SQL quote escaping. Tests never contact real services.
+
+## 🗺️ Roadmap
+
+- **Recording intake:** audio and video upload, FFmpeg, faster-whisper transcription with timestamps, speaker separation with WhisperX.
+- **Search and Q&A:** speaker-turn chunks, keyword plus vector search, answers that cite timestamps, semantic embeddings for H-MEM recall.
+- **Trust and review:** verifier confidence in the UI, human approve/edit/reject before task updates, deadlines and supporting quotes per action item.
+- **Product:** PDF export, accounts and per-user access, persistent storage, an evaluation set of labeled transcripts.
+
+## 🔐 Security
+
+- Never commit API keys, passwords or tokens.
+- Keep secrets in `.env` and commit only `.env.example` with placeholders.
+- Avoid confidential meeting data in public demonstrations.
+
+## 👥 Team
+
+| Member | Role |
+|---|---|
+| **Ch. Muhammad Usman Shakir** | Team Lead, AI/ML |
+| **Azizullah Asad** | Backend |
+| **Palwasha Qureshi** | Frontend |
+| **Muhammad Anis** | Mentor, issue support |
+
+## 🤝 Contribution Workflow
 
 1. Pull the latest changes from `main`.
 2. Create a feature branch for your task.
@@ -134,32 +257,6 @@ We use Git branches and pull requests to keep development organized and review c
 4. Commit and push your branch.
 5. Open a pull request for review.
 
-## 🔐 Security
-
-- Never commit API keys, passwords, or secrets.
-- Store sensitive configuration in environment variables.
-- Keep `.env` files out of version control.
-- Avoid using confidential meeting recordings or personal information in public demonstrations.
-
-*Roadmap items should be updated as features are implemented and verified.*
-
-## 🌟 Our Vision
-
-We envision a future where every conversation can become useful knowledge — easy to understand, easy to search, and easy to act upon.
-
-**RecallAI — Remember the conversation. Act on the insights.**
-
 ---
 
-Developed with ❤️ by the RecallAI team.
-
-## 👥 Meet the Team
-
-- **Usman Shakir** — AI/ML
-- **Aziz** — Backend Development
-- **Palwasha Qureshi** — Frontend Development
-- **Muhammad Anis** — Data, Testing & Documentation
-
----
-
-**RecallAI — Every Conversation. Every Insight. One Place.** ❤️
+**RecallAI: Every Conversation. Every Insight. One Place.**
