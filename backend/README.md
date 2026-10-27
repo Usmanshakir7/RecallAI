@@ -1,7 +1,6 @@
 # RecallAI Backend
 
 FastAPI backend that accepts a meeting transcript and returns meeting insights.
-It can also look up open tasks for given owners in a Zetaris table.
 
 ## Requirements
 
@@ -21,38 +20,46 @@ On macOS or Linux, use `source venv/bin/activate` instead of `venv\Scripts\activ
 
 ## Environment variables
 
-Copy `.env.example` (in the project root) to `backend/.env` and fill in the values.
-The `.env` file must be in the `backend` folder, because the server is started from there.
+Copy `.env.example` (in the project root) to `.env` and fill in the values.
 Never commit the `.env` file.
-Restart the server after changing `.env`, because `--reload` does not watch it.
 
 | Variable | Description |
 |----------|-------------|
 | AI_API_KEY | API key for the AI provider |
 | AI_MODEL | Model name to use |
-| ZETARIS_API_KEY | API key for Zetaris. If it is missing, Zetaris routes return `503` |
-| ZETARIS_REST_URL | Zetaris REST URL, for example `http://localhost:8888/api/v1.0` |
-| ZETARIS_ORG_ID | Optional. Organisation ID sent to Zetaris. Default: `1` |
-| ZETARIS_TASKS_TABLE | Optional. Tasks table name. Default: `recallai_data.tasks` |
+| SAMPLE_MODE | Set to `true` to run with sample data |
+| ZETARIS_REST_URL | Zetaris REST API base URL, e.g. `http://localhost:8888/api/v1.0` |
+| ZETARIS_ORG_ID | Zetaris organisation ID (numeric) |
+| ZETARIS_API_KEY | Zetaris API token. Keep it in `.env` only |
+| HMEM_URL | H-MEM service address, e.g. `http://127.0.0.1:7171` |
 
-The Memory service (`hmem`) has its own variables. See `.env.example` for their names.
+## Optional services
 
-## Zetaris setup (local development)
+### H-MEM (memory service)
 
-Zetaris runs in the `zetaris-sandbox` GitHub Codespace. To reach it from your machine:
+Runs locally from `services/hmem` (Node.js). From the project root:
 
-1. Start the codespace at https://github.com/codespaces.
-2. In a separate terminal, keep this running:
-   ```
-   gh codespace ports forward 8888:8888
-   ```
-3. Set `ZETARIS_REST_URL=http://localhost:8888/api/v1.0` in `.env`.
-4. Open http://127.0.0.1:8000/health/zetaris. It should return `{"status": "ok"}`.
+```
+cd services\hmem
+npm install
+set HMEM_PORT=7171
+npx tsx server.ts
+```
 
-The tasks table must have these columns: `id`, `title`, `owner`, `status`.
+Keep this window open and set `HMEM_URL=http://127.0.0.1:7171` in `.env`.
 
-When you finish, stop the codespace to save quota.
-Do not run `docker compose down -v`, because it deletes the tasks table data.
+### Zetaris (data platform)
+
+Zetaris runs in a GitHub Codespace, not on the laptop. Start the Codespace, run
+`docker compose up -d` in the Zetaris platform folder, then forward the API port
+to your laptop:
+
+```
+gh codespace ports forward 8888:8888
+```
+
+Set `ZETARIS_REST_URL=http://localhost:8888/api/v1.0`, `ZETARIS_ORG_ID` and
+`ZETARIS_API_KEY` in `.env`. Stop the Codespace when you are done.
 
 ## Run the server
 
@@ -72,22 +79,6 @@ Response:
 ```json
 {"status": "ok"}
 ```
-
-### GET /health/zetaris
-
-Checks that Zetaris answers a simple query.
-
-Response:
-
-```json
-{"status": "ok"}
-```
-
-Other values of `status`: `not_configured` (no `ZETARIS_API_KEY`) and `unexpected_result`.
-
-### GET /health/hmem
-
-Checks the Memory service. Returns `{"status": "not_configured"}` if it is not set up.
 
 ### POST /analyze
 
@@ -114,56 +105,11 @@ Errors:
 - `422`: transcript is missing, empty, or longer than 100,000 characters.
 - `502`: AI processing failed. The server keeps running.
 
-### GET /memory/recall
-
-Reads from the Memory service.
-
-Errors:
-
-- `503`: Memory service is not configured.
-
-### POST /tasks/check
-
-Returns the open (not done) tasks for the given owners from the Zetaris tasks table.
-Owner names are matched without regard to upper or lower case.
-
-Request:
-
-```json
-{"owners": ["John Doe"]}
-```
-
-Response:
-
-```json
-{
-  "owners_checked": ["John Doe"],
-  "open_tasks": [
-    {"id": "T-101", "title": "Fix login bug", "owner": "John Doe", "status": "In Progress"},
-    {"id": "T-105", "title": "Write API documentation", "owner": "John Doe", "status": "Not Started"}
-  ]
-}
-```
-
-Errors:
-
-- `422`: the request body is invalid.
-- `502`: Zetaris is unreachable or returned an error (for example, a wrong column name).
-- `503`: Zetaris is not configured (`ZETARIS_API_KEY` is missing).
-
 ## Run tests
 
 ```
 pytest -v
 ```
-
-## Troubleshooting
-
-- `503 Zetaris is not configured`: `ZETARIS_API_KEY` was not loaded. Check that `backend/.env`
-  is not empty, then restart the server.
-- `502 Zetaris is unreachable`: the codespace is stopped, the port forward is not running,
-  or the query failed. To see the real error, run in the `backend` folder:
-  `python -c "from dotenv import load_dotenv; load_dotenv(); from app.services import tasks_service as t; print(t.get_open_tasks(['John Doe']))"`
 
 ## Notes
 
