@@ -29,3 +29,4 @@ class InsightsResponse(BaseModel):
     topics: List[str]
     decisions: List[str]
     action_items: List[ActionItem]
+    meeting_id: Optional[str] = None
