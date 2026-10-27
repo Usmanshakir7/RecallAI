@@ -1,4 +1,5 @@
 import os
+from app.config import SAMPLE_MODE
 import time
 from threading import Lock
 
@@ -8,6 +9,8 @@ MAX_ENTRIES = 200
 
 
 def current_model():
+    if SAMPLE_MODE:
+        return "sample-mode"
     return os.getenv("AI_MODEL") or "not-set"
 
 
