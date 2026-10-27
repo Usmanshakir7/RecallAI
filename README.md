@@ -56,14 +56,13 @@ H-MEM and Zetaris are optional services. If either is unavailable, `/analyze` st
 
 ## 🛠️ Technology Stack
 
-| Component | Technology |
-|---|---|
-| Frontend | Python, [Streamlit](https://streamlit.io) |
-| Backend API | Python, [FastAPI](https://fastapi.tiangolo.com) |
-| AI processing | [Google Gemini](https://ai.google.dev) (`google-genai`) with a rule-based fallback |
-| Memory | [H-MEM](https://github.com/Meterless/Meterless) ([Node.js](https://nodejs.org), TypeScript) |
-| Data layer | [Zetaris](https://www.zetaris.com) REST API |
-| Testing | [pytest](https://pytest.org) |
+[![Python](https://img.shields.io/badge/PYTHON-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org) [![TypeScript](https://img.shields.io/badge/TYPESCRIPT-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
+[![FastAPI](https://img.shields.io/badge/FASTAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com) [![Streamlit](https://img.shields.io/badge/STREAMLIT-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io) [![Node.js](https://img.shields.io/badge/NODE.JS-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+
+[![Gemini](https://img.shields.io/badge/GEMINI-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev) [![Zetaris](https://img.shields.io/badge/ZETARIS-0B6B63?style=for-the-badge)](https://www.zetaris.com) [![H-MEM](https://img.shields.io/badge/H--MEM-1F2937?style=for-the-badge)](https://github.com/Meterless/Meterless)
+
+[![pytest](https://img.shields.io/badge/PYTEST-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org) [![Git](https://img.shields.io/badge/GIT-F05032?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com) [![GitHub](https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com)
 
 ## 📂 Project Structure
 
