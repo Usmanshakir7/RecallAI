@@ -38,7 +38,7 @@ H-MEM and Zetaris are optional services. If either is unavailable, `/analyze` st
 ### How `POST /analyze` works
 
 1. **Validate** the transcript. Empty text or more than 100,000 characters returns `422`.
-2. **Extract with rules.** Finds decisions ("decided", "agreed", "will use"), commitments ("Sara: I will…", "Action:", "TODO:"), questions and short topic labels.
+2. **Extract with rules.** Finds decisions ("decided", "agreed", "will use"), commitments ("Alice: I will…", "Action:", "TODO:"), questions and short topic labels.
 3. **Extract with Gemini** when `GEMINI_API_KEY` is set. Without a key, the rule-based result is returned.
 4. **Clean the output.** Topics are limited to five short labels, copies of the transcript and duplicates are removed, and generic owners such as "we" or "someone" become `null`.
 5. **Merge.** Gemini's result is used first and rule-based items fill any gaps.
@@ -49,8 +49,8 @@ H-MEM and Zetaris are optional services. If either is unavailable, `/analyze` st
 
 | Technology | Role in RecallAI | Where |
 |---|---|---|
-| **Zetaris** | Data layer. Queries the tasks table through its REST SQL API without copying data. | `backend/app/services/zetaris_client.py`, `tasks_service.py`, `POST /tasks/check` |
-| **H-MEM** (Meterless) | Memory engine. Stores every decision and recalls related ones by query. | `services/hmem`, `hmem_client.py`, `GET /memory/recall` |
+| [**Zetaris**](https://www.zetaris.com) | Data layer. Queries the tasks table through its REST SQL API without copying data. | `backend/app/services/zetaris_client.py`, `tasks_service.py`, `POST /tasks/check` |
+| [**H-MEM**](https://github.com/Meterless/Meterless) (Meterless) | Memory engine. Stores every decision and recalls related ones by query. | `services/hmem`, `hmem_client.py`, `GET /memory/recall` |
 
 `services/hmem` is adapted from the Meterless H-MEM reference implementation (Apache-2.0). `server.ts` is our own HTTP wrapper around the engine. Memories are saved to disk and survive a restart.
 
@@ -58,12 +58,12 @@ H-MEM and Zetaris are optional services. If either is unavailable, `/analyze` st
 
 | Component | Technology |
 |---|---|
-| Frontend | Python, Streamlit |
-| Backend API | Python, FastAPI |
-| AI processing | Google Gemini (`google-genai`) with a rule-based fallback |
-| Memory | H-MEM (Node.js, TypeScript) |
-| Data layer | Zetaris REST API |
-| Testing | pytest |
+| Frontend | Python, [Streamlit](https://streamlit.io) |
+| Backend API | Python, [FastAPI](https://fastapi.tiangolo.com) |
+| AI processing | [Google Gemini](https://ai.google.dev) (`google-genai`) with a rule-based fallback |
+| Memory | [H-MEM](https://github.com/Meterless/Meterless) ([Node.js](https://nodejs.org), TypeScript) |
+| Data layer | [Zetaris](https://www.zetaris.com) REST API |
+| Testing | [pytest](https://pytest.org) |
 
 ## 📂 Project Structure
 
@@ -96,7 +96,7 @@ RecallAI/
 
 - Python 3.11 or 3.12
 - Git
-- Node.js (only for the H-MEM memory service)
+- [Node.js](https://nodejs.org) (only for the H-MEM memory service)
 
 ### 1. Clone the repository
 
@@ -180,16 +180,16 @@ Copy `.env.example` to `.env` and fill in the values. `.env` is ignored by git.
 ```bash
 curl -X POST http://127.0.0.1:8000/analyze \
   -H "Content-Type: application/json" \
-  -d '{"transcript":"Sara: I will test the API.\nWe decided to use FastAPI."}'
+  -d '{"transcript":"Alice: I will test the API.\nWe decided to use FastAPI."}'
 ```
 
 ```json
 {
   "status": "completed",
-  "summary": "Sara: I will test the API. We decided to use FastAPI.",
-  "topics": ["Sara: I will test the API"],
+  "summary": "Alice: I will test the API. We decided to use FastAPI.",
+  "topics": ["Alice: I will test the API"],
   "decisions": ["We decided to use FastAPI"],
-  "action_items": [{"task": "I will test the API", "owner": "Sara"}]
+  "action_items": [{"task": "I will test the API", "owner": "Alice"}]
 }
 ```
 
