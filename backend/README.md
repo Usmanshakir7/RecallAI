@@ -1,6 +1,7 @@
 # RecallAI Backend
 
 FastAPI backend that accepts a meeting transcript and returns meeting insights.
+It can also look up open tasks for given owners in a Zetaris table.
 
 ## Requirements
 
@@ -20,8 +21,10 @@ On macOS or Linux, use `source venv/bin/activate` instead of `venv\Scripts\activ
 
 ## Environment variables
 
-Copy `.env.example` (in the project root) to `.env` and fill in the values.
+Copy `.env.example` (in the project root) to `backend/.env` and fill in the values.
+The `.env` file must be in the `backend` folder, because the server is started from there.
 Never commit the `.env` file.
+Restart the server after changing `.env`, because `--reload` does not watch it.
 
 | Variable | Description |
 |----------|-------------|
@@ -80,6 +83,22 @@ Response:
 {"status": "ok"}
 ```
 
+### GET /health/zetaris
+
+Checks that Zetaris answers a simple query.
+
+Response:
+
+```json
+{"status": "ok"}
+```
+
+Other values of `status`: `not_configured` (no `ZETARIS_API_KEY`) and `unexpected_result`.
+
+### GET /health/hmem
+
+Checks the Memory service. Returns `{"status": "not_configured"}` if it is not set up.
+
 ### POST /analyze
 
 Request:
@@ -105,11 +124,56 @@ Errors:
 - `422`: transcript is missing, empty, or longer than 100,000 characters.
 - `502`: AI processing failed. The server keeps running.
 
+### GET /memory/recall
+
+Reads from the Memory service.
+
+Errors:
+
+- `503`: Memory service is not configured.
+
+### POST /tasks/check
+
+Returns the open (not done) tasks for the given owners from the Zetaris tasks table.
+Owner names are matched without regard to upper or lower case.
+
+Request:
+
+```json
+{"owners": ["John Doe"]}
+```
+
+Response:
+
+```json
+{
+  "owners_checked": ["John Doe"],
+  "open_tasks": [
+    {"id": "T-101", "title": "Fix login bug", "owner": "John Doe", "status": "In Progress"},
+    {"id": "T-105", "title": "Write API documentation", "owner": "John Doe", "status": "Not Started"}
+  ]
+}
+```
+
+Errors:
+
+- `422`: the request body is invalid.
+- `502`: Zetaris is unreachable or returned an error (for example, a wrong column name).
+- `503`: Zetaris is not configured (`ZETARIS_API_KEY` is missing).
+
 ## Run tests
 
 ```
 pytest -v
 ```
+
+## Troubleshooting
+
+- `503 Zetaris is not configured`: `ZETARIS_API_KEY` was not loaded. Check that `backend/.env`
+  is not empty, then restart the server.
+- `502 Zetaris is unreachable`: the codespace is stopped, the port forward is not running,
+  or the query failed. To see the real error, run in the `backend` folder:
+  `python -c "from dotenv import load_dotenv; load_dotenv(); from app.services import tasks_service as t; print(t.get_open_tasks(['John Doe']))"`
 
 ## Notes
 
