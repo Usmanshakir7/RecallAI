@@ -152,3 +152,14 @@ We envision a future where every conversation can become useful knowledge — ea
 ---
 
 Developed with ❤️ by the RecallAI team.
+
+## 👥 Meet the Team
+
+- **Usman Shakir** — AI/ML
+- **Aziz** — Backend Development
+- **Palwasha Qureshi** — Frontend Development
+- **Muhammad Anis** — Data, Testing & Documentation
+
+---
+
+**RecallAI — Every Conversation. Every Insight. One Place.** ❤️
