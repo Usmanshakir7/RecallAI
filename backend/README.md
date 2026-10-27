@@ -27,6 +27,39 @@ Never commit the `.env` file.
 |----------|-------------|
 | AI_API_KEY | API key for the AI provider |
 | AI_MODEL | Model name to use |
+| SAMPLE_MODE | Set to `true` to run with sample data |
+| ZETARIS_REST_URL | Zetaris REST API base URL, e.g. `http://localhost:8888/api/v1.0` |
+| ZETARIS_ORG_ID | Zetaris organisation ID (numeric) |
+| ZETARIS_API_KEY | Zetaris API token. Keep it in `.env` only |
+| HMEM_URL | H-MEM service address, e.g. `http://127.0.0.1:7171` |
+
+## Optional services
+
+### H-MEM (memory service)
+
+Runs locally from `services/hmem` (Node.js). From the project root:
+
+```
+cd services\hmem
+npm install
+set HMEM_PORT=7171
+npx tsx server.ts
+```
+
+Keep this window open and set `HMEM_URL=http://127.0.0.1:7171` in `.env`.
+
+### Zetaris (data platform)
+
+Zetaris runs in a GitHub Codespace, not on the laptop. Start the Codespace, run
+`docker compose up -d` in the Zetaris platform folder, then forward the API port
+to your laptop:
+
+```
+gh codespace ports forward 8888:8888
+```
+
+Set `ZETARIS_REST_URL=http://localhost:8888/api/v1.0`, `ZETARIS_ORG_ID` and
+`ZETARIS_API_KEY` in `.env`. Stop the Codespace when you are done.
 
 ## Run the server
 

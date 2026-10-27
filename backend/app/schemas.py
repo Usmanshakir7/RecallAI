@@ -31,3 +31,17 @@ class InsightsResponse(BaseModel):
     decisions: List[str]
     action_items: List[ActionItem]
 
+class TaskCheckRequest(BaseModel):
+    owners: List[str]
+
+
+class OpenTask(BaseModel):
+    id: str
+    title: str
+    owner: str
+    status: str
+
+
+class TaskCheckResponse(BaseModel):
+    owners_checked: List[str]
+    open_tasks: List[OpenTask]

@@ -13,3 +13,4 @@ build/
 coverage/
 uploads/
 .vscode/
+services/hmem/data/
