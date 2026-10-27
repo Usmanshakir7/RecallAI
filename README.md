@@ -6,7 +6,7 @@ RecallAI turns meeting transcripts into structured, searchable and actionable kn
 
 Built for the **Open Agent Hackathon 2026**.
 
-🌟 Zetaris Demo Challenge: In one sentence, why did you think it was amazing?
+## 🌟 Zetaris Demo Challenge: In one sentence, why did you think it was amazing?
 
 Zetaris let us check a commitment made in a meeting against the real open tasks of that person with a single SQL call over REST, without copying or moving any data. <!-- EDIT: replace with your own sentence -->
 
