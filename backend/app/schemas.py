@@ -1,7 +1,7 @@
 
 from typing import List, Optional
 from pydantic import BaseModel, field_validator
-
+from pydantic import BaseModel, field_validator, Field
 MAX_TRANSCRIPT_CHARS = 100_000
 
 
