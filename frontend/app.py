@@ -816,10 +816,10 @@ st.markdown(
 )
 
 team_members = [
-    ("Usman Shakir", "Team Lead · AI/ML Developer", "🧠"),
-    ("Azizullah Asad", "Backend Developer", "⚙️"),
+    ("Usman Shakir", "Team Lead · AI/ML Developer . Demo", "🧠"),
+    ("Azizullah Asad", "Backend Developer . Documentation", "⚙️"),
     ("Palwasha Sajjad", "Frontend Developer", "🎨"),
-    ("Muhammad Anis", "Data · QA · Documentation & Demo", "📋"),
+    ("Muhammad Anis", "Technical Guide", "📋"),
 ]
 
 team_columns = st.columns(4)
