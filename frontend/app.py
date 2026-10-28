@@ -2105,8 +2105,8 @@ def show_workspace():
             "Meeting transcript",
             placeholder=(
                 "Example:\n"
-                "Usman: I will complete the backend API by Friday.\n"
-                "Palwasha: I will finish the dashboard.\n"
+                "He: I will complete the backend API by Friday.\n"
+                "She: I will finish the dashboard.\n"
                 "The team decided to use FastAPI for the backend."
             ),
             height=260,
