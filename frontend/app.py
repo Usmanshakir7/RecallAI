@@ -2025,10 +2025,11 @@ with st.sidebar:
 
     render('<div class="side-title">System</div>')
     demo_mode = st.toggle(
-        "Demo mode (no backend needed)",
-        key="demo_mode",
-        help="Uses built-in sample results. Handy if the backend or Wi-Fi fails during the presentation.",
-    )
+    "Demo mode (no backend needed)",
+    value=True,
+    key="demo_mode",
+    help="Uses built-in sample results. Handy if the backend or Wi-Fi fails during the presentation.",
+     )
 
     backend_online = check_backend()
     if demo_mode:
