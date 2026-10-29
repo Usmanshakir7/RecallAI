@@ -126,6 +126,44 @@ div[data-testid="stFileUploader"] button {
 .wl-task { font-size: 13px; color: #b6c4e0; padding: 3px 0; }
 .wl-task i { color: #8fa3c4; font-style: normal; font-size: 12px; }
 @media (max-width: 700px) { .rp-bubble { max-width: 78%; } }
+/* Team member social links — reveal on hover */
+.team-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    opacity: 0;
+    transform: translateY(8px);
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.25s ease, transform 0.25s ease,
+                max-height 0.25s ease;
+}
+
+.team-card:hover .team-links,
+.team-card:focus-within .team-links {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 50px;
+}
+
+.team-links a {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--cyan);
+    font-size: 12px;
+    text-decoration: none;
+    background: rgba(53, 224, 242, 0.07);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.team-links a:hover {
+    background: rgba(139, 124, 255, 0.16);
+    border-color: var(--violet);
+}
 </style>
 """
 
@@ -2519,15 +2557,66 @@ def show_team():
     )
 
     team_members = [
-        ("Usman Shakir", "Team Lead · AI/ML Developer", "🧠"),
-        ("Azizullah Asad", "Backend Developer", "⚙️"),
-        ("Palwasha Sajjad", "Frontend Developer", "🎨"),
-        ("Muhammad Anis", "Technical Guider", "📋"),
-    ]
+    (
+        "Usman Shakir",
+        "Team Lead · AI/ML Developer",
+        "🧠",
+        "https://linkedin.com/in/usman-shakir7/",
+        "https://github.com/Usmanshakir7",
+    ),
+    (
+        "Azizullah Asad",
+        "Backend Developer",
+        "⚙️",
+        "",
+        "",
+    ),
+    (
+        "Palwasha Sajjad",
+        "Frontend Developer",
+        "🎨",
+        "https://www.linkedin.com/in/palwasheyqureshi/",
+        "https://github.com/Palwasha-48",
+    ),
+    (
+        "Muhammad Anis",
+        "Technical Guider",
+        "📋",
+        "",
+        "",
+    ),
+]
 
-    team_columns = st.columns(4, gap="medium")
-    for column, (name, role, icon) in zip(team_columns, team_members):
-        with column:
+team_columns = st.columns(4, gap="medium")
+
+for column, (name, role, icon, linkedin_url, github_url) in zip(
+    team_columns, team_members
+):
+    with column:
+        social_links = ""
+
+        if linkedin_url:
+            social_links += (
+                f'<a href="{linkedin_url}" target="_blank" '
+                'rel="noopener noreferrer">LinkedIn</a>'
+            )
+
+        if github_url:
+            social_links += (
+                f'<a href="{github_url}" target="_blank" '
+                'rel="noopener noreferrer">GitHub</a>'
+            )
+
+        render(
+            f"""
+            <div class="team-card">
+                <div class="team-avatar">{icon}</div>
+                <div class="team-name">{safe_text(name)}</div>
+                <div class="team-role">{safe_text(role)}</div>
+                <div class="team-links">{social_links}</div>
+            </div>
+            """
+        )
             render(
                 f"""
                 <div class="team-card">
