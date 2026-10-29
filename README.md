@@ -6,7 +6,7 @@ RecallAI turns meeting transcripts into structured, searchable and actionable kn
 
 Built for the **Open Agent Hackathon 2026**.
 
-[LIVE DEMO](IDER DAL DE STREAMLIT WALI LINK)
+[LIVE DEMO](https://recallai4.streamlit.app/)
 
 ## 🌟 Zetaris Demo Challenge: In one sentence, why did you think it was amazing?
 
