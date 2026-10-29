@@ -2544,7 +2544,7 @@ def show_workspace():
 # PAGE 2: TEAM
 # =========================================================
 def show_team():
-    render(
+      render(
         """
         <div class="hero">
             <div class="hero-title">Team NOVAMIND</div>
@@ -2554,8 +2554,8 @@ def show_team():
             </div>
         </div>
         """
-    )
-
+        )
+  
     team_members = [
     (
         "Usman Shakir",
@@ -2640,7 +2640,7 @@ for column, (name, role, icon, linkedin_url, github_url) in zip(
             </div>
         </div>
         """
-    )
+      )
 
 
 # =========================================================
