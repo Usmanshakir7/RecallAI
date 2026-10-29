@@ -2543,8 +2543,11 @@ def show_workspace():
 # =========================================================
 # PAGE 2: TEAM
 # =========================================================
+# =========================================================
+# PAGE 2: TEAM
+# =========================================================
 def show_team():
-      render(
+    render(
         """
         <div class="hero">
             <div class="hero-title">Team NOVAMIND</div>
@@ -2554,80 +2557,72 @@ def show_team():
             </div>
         </div>
         """
-        )
-  
+    )
+
     team_members = [
-    (
-        "Usman Shakir",
-        "Team Lead · AI/ML Developer",
-        "🧠",
-        "https://linkedin.com/in/usman-shakir7/",
-        "https://github.com/Usmanshakir7",
-    ),
-    (
-        "Azizullah Asad",
-        "Backend Developer",
-        "⚙️",
-        "",
-        "",
-    ),
-    (
-        "Palwasha Sajjad",
-        "Frontend Developer",
-        "🎨",
-        "https://www.linkedin.com/in/palwasheyqureshi/",
-        "https://github.com/Palwasha-48",
-    ),
-    (
-        "Muhammad Anis",
-        "Technical Guider",
-        "📋",
-        "",
-        "",
-    ),
-]
+        (
+            "Usman Shakir",
+            "Team Lead · AI/ML Developer",
+            "🧠",
+            "https://linkedin.com/in/usman-shakir7/",
+            "https://github.com/Usmanshakir7",
+        ),
+        (
+            "Azizullah Asad",
+            "Backend Developer",
+            "⚙️",
+            "",
+            "",
+        ),
+        (
+            "Palwasha Sajjad",
+            "Frontend Developer",
+            "🎨",
+            "https://www.linkedin.com/in/palwasheyqureshi/",
+            "https://github.com/Palwasha-48",
+        ),
+        (
+            "Muhammad Anis",
+            "Technical Guider",
+            "📋",
+            "",
+            "",
+        ),
+    ]
 
-team_columns = st.columns(4, gap="medium")
+    team_columns = st.columns(4, gap="medium")
 
-for column, (name, role, icon, linkedin_url, github_url) in zip(
-    team_columns, team_members
-):
-    with column:
-        social_links = ""
+    for column, (name, role, icon, linkedin_url, github_url) in zip(
+        team_columns, team_members
+    ):
+        with column:
+            social_links = ""
 
-        if linkedin_url:
-            social_links += (
-                f'<a href="{linkedin_url}" target="_blank" '
-                'rel="noopener noreferrer">LinkedIn</a>'
-            )
+            if linkedin_url:
+                social_links += (
+                    f'<a href="{linkedin_url}" target="_blank" '
+                    'rel="noopener noreferrer">LinkedIn</a>'
+                )
 
-        if github_url:
-            social_links += (
-                f'<a href="{github_url}" target="_blank" '
-                'rel="noopener noreferrer">GitHub</a>'
-            )
+            if github_url:
+                social_links += (
+                    f'<a href="{github_url}" target="_blank" '
+                    'rel="noopener noreferrer">GitHub</a>'
+                )
 
-        render(
-            f"""
-            <div class="team-card">
-                <div class="team-avatar">{icon}</div>
-                <div class="team-name">{safe_text(name)}</div>
-                <div class="team-role">{safe_text(role)}</div>
-                <div class="team-links">{social_links}</div>
-            </div>
-            """
-        )
             render(
                 f"""
                 <div class="team-card">
                     <div class="team-avatar">{icon}</div>
                     <div class="team-name">{safe_text(name)}</div>
                     <div class="team-role">{safe_text(role)}</div>
+                    <div class="team-links">{social_links}</div>
                 </div>
                 """
             )
 
     st.write("")
+
     render(
         """
         <div class="panel">
@@ -2640,7 +2635,7 @@ for column, (name, role, icon, linkedin_url, github_url) in zip(
             </div>
         </div>
         """
-      )
+    )
 
 
 # =========================================================
