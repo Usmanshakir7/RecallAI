@@ -2571,8 +2571,8 @@ def show_team():
             "Azizullah Asad",
             "Backend Developer",
             "⚙️",
-            "",
-            "",
+            "https://www.linkedin.com/in/azizullah-asad-203789345/",
+            "https://github.com/Baloxh-Aziz",
         ),
         (
             "Palwasha Sajjad",
